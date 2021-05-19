@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data >
+        <variable
+            name="article"
+            type="com.rodrigotguerra.newsapp.models.NewsData" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp">
+
+        <ImageView
+            android:id="@+id/iv_news_item"
+            android:layout_width="85dp"
+            android:layout_height="85dp"
+            android:image_url="@{article.urlToImage}" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginStart="5dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:text="@{article.title}"
+                tools:text="News Title" />
+
+            <TextView
+                android:id="@+id/tv_source_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:text="@{article.author}"
+                tools:text="Source" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+</layout>
