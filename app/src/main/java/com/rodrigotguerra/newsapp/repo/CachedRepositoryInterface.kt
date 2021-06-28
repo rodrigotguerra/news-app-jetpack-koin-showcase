@@ -1,10 +1,10 @@
 package com.rodrigotguerra.newsapp.repo
 
 import com.rodrigotguerra.newsapp.models.NewsData
-import com.rodrigotguerra.newsapp.network.NewsListResponseSchema
-import io.reactivex.Single
 
-interface NewsRepositoryInterface {
+interface CachedRepositoryInterface{
+
+    fun getNewsFromDB() : List<NewsData>
 
     suspend fun insertNews(news: List<NewsData>) : List<Long>
 
@@ -14,12 +14,8 @@ interface NewsRepositoryInterface {
 
     suspend fun deleteAllRecentNews()
 
-    suspend fun getArticle(articleId: Int) : NewsData
-
-    fun getNewsFromDB() : List<NewsData>
-
     fun getFavoriteArticles() : List<NewsData>
 
-    fun getBrNewsFromApi() : Single<NewsListResponseSchema>
+    suspend fun getArticle(articleId: Int) : NewsData
 
 }

@@ -6,7 +6,8 @@ import com.rodrigotguerra.newsapp.Constants.NEWS_API_BASE_URL
 import com.rodrigotguerra.newsapp.Constants.NEWS_DATABASE
 import com.rodrigotguerra.newsapp.models.roomdb.NewsDatabase
 import com.rodrigotguerra.newsapp.network.NewsApi
-import com.rodrigotguerra.newsapp.repo.NewsRepository
+import com.rodrigotguerra.newsapp.repo.CachedRepository
+import com.rodrigotguerra.newsapp.repo.RemoteRepository
 import com.rodrigotguerra.newsapp.util.SharedPreferencesHelper
 import com.rodrigotguerra.newsapp.viewmodels.ArticleDetailsViewModel
 import com.rodrigotguerra.newsapp.viewmodels.FavoritesViewModel
@@ -40,25 +41,30 @@ val mainModule = module {
     }
 
     factory {
-        NewsRepository(get(), get())
+        RemoteRepository(get())
+    }
+
+    factory {
+        CachedRepository(get())
     }
 
     viewModel {
         NewsViewModel(
-            repository = get(),
+            remoteRepository = get<RemoteRepository>(),
+            cachedRepository = get<CachedRepository>(),
             prefHelper = get()
         )
     }
 
     viewModel {
         ArticleDetailsViewModel(
-            repository = get()
+            repository = get<CachedRepository>()
         )
     }
 
     viewModel {
         FavoritesViewModel(
-            repository = get()
+            repository = get<CachedRepository>()
         )
     }
 }

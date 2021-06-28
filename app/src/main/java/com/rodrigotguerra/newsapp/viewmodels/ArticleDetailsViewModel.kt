@@ -1,38 +1,35 @@
 package com.rodrigotguerra.newsapp.viewmodels
 
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rodrigotguerra.newsapp.models.NewsData
-import com.rodrigotguerra.newsapp.repo.NewsRepository
+import com.rodrigotguerra.newsapp.repo.CachedRepositoryInterface
 import kotlinx.coroutines.launch
 
-class ArticleDetailsViewModel(private val repository: NewsRepository) : ViewModel() {
+class ArticleDetailsViewModel(private val repository: CachedRepositoryInterface) : ViewModel() {
 
-    val articleLiveData = MutableLiveData<NewsData>()
-    val isFavorite = MutableLiveData<Boolean>()
+    private val _articleLiveData = MutableLiveData<NewsData>()
+    val articleLiveData: LiveData<NewsData> get() = _articleLiveData
+    private val _isFavorite = MutableLiveData<Boolean>()
+    val isFavorite: LiveData<Boolean> get() = _isFavorite
 
     fun fetch(articleId: Int) {
         viewModelScope.launch {
             val article = repository.getArticle(articleId)
-            articleLiveData.postValue(article)
-            isFavorite.postValue(article.favorite)
+            _articleLiveData.postValue(article)
+            _isFavorite.postValue(article.favorite)
         }
     }
 
     fun favoriteAnArticle() {
         viewModelScope.launch {
-            articleLiveData.value?.let { article ->
+            _articleLiveData.value?.let { article ->
                 val articleId = article.id
-                isFavorite.value?.let {
-                    if (!it) {
-                        repository.insertFavorite(articleId)
-                        isFavorite.postValue(!it)
-                    }
-                    else {
-                        repository.deleteFavorite(articleId)
-                        isFavorite.postValue(!it)
-                    }
+                _isFavorite.value?.let {
+                    if (!it) repository.insertFavorite(articleId) else repository.deleteFavorite(articleId)
+                    _isFavorite.postValue(!it)
                 }
             }
         }

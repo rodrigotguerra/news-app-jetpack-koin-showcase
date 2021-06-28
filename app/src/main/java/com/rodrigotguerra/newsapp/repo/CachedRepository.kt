@@ -2,11 +2,12 @@ package com.rodrigotguerra.newsapp.repo
 
 import com.rodrigotguerra.newsapp.models.NewsData
 import com.rodrigotguerra.newsapp.models.roomdb.NewsDao
-import com.rodrigotguerra.newsapp.network.NewsApi
-import com.rodrigotguerra.newsapp.network.NewsListResponseSchema
-import io.reactivex.Single
 
-class NewsRepository(private val newsApi: NewsApi, private val dao: NewsDao) : NewsRepositoryInterface {
+class CachedRepository(private val dao: NewsDao) : CachedRepositoryInterface {
+
+    override fun getNewsFromDB(): List<NewsData> {
+        return dao.getNews()
+    }
 
     override suspend fun insertNews(news: List<NewsData>) : List<Long>{
         return dao.insertNews(*news.toTypedArray())
@@ -28,16 +29,8 @@ class NewsRepository(private val newsApi: NewsApi, private val dao: NewsDao) : N
         return dao.getArticle(articleId)
     }
 
-    override fun getNewsFromDB(): List<NewsData> {
-        return dao.getNews()
-    }
-
     override fun getFavoriteArticles(): List<NewsData> {
         return dao.getFavoriteArticles()
-    }
-
-    override fun getBrNewsFromApi(): Single<NewsListResponseSchema> {
-        return newsApi.getBrTopHeadlines()
     }
 
 }

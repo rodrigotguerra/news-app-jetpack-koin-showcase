@@ -1,12 +1,14 @@
 package com.rodrigotguerra.newsapp.viewmodels
 
 import android.util.Log
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rodrigotguerra.newsapp.models.NewsData
-import com.rodrigotguerra.newsapp.network.NewsListResponseSchema
-import com.rodrigotguerra.newsapp.repo.NewsRepository
+import com.rodrigotguerra.newsapp.models.NewsListResponseSchema
+import com.rodrigotguerra.newsapp.repo.CachedRepositoryInterface
+import com.rodrigotguerra.newsapp.repo.RemoteRepositoryInterface
 import com.rodrigotguerra.newsapp.util.SharedPreferencesHelper
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -16,7 +18,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class NewsViewModel(
-    private val repository: NewsRepository,
+    private val remoteRepository: RemoteRepositoryInterface,
+    private val cachedRepository: CachedRepositoryInterface,
     private val prefHelper: SharedPreferencesHelper
 ) : ViewModel() {
 
@@ -24,9 +27,12 @@ class NewsViewModel(
 
     private val refreshTime = 5 * 60 * 1000 * 1000 * 1000L
 
-    val newsList = MutableLiveData<List<NewsData>>()
-    val newsLoadError = MutableLiveData<Boolean>()
-    val loading = MutableLiveData<Boolean>()
+    private val _newsList = MutableLiveData<List<NewsData>>()
+    val newsList: LiveData<List<NewsData>> get() = _newsList
+    private val _newsLoadError = MutableLiveData<Boolean>()
+    val newsLoadError: LiveData<Boolean> get() = _newsLoadError
+    private val _loading = MutableLiveData<Boolean>()
+    val loading : LiveData<Boolean> get() = _loading
 
     fun refresh() {
         val updateTime = prefHelper.getUpdateTime()
@@ -40,17 +46,17 @@ class NewsViewModel(
     }
 
     private fun getBrNewsFromDatabase() {
-        loading.value = true
+        _loading.value = true
         viewModelScope.launch(Dispatchers.IO) {
-            val news = repository.getNewsFromDB()
+            val news = cachedRepository.getNewsFromDB()
             fetchDataToUI(news)
         }
     }
 
     private fun getBrNewsFromRemote() {
-        loading.value = true
+        _loading.value = true
         disposable.add(
-            repository.getBrNewsFromApi().subscribeOn(Schedulers.newThread())
+            remoteRepository.getBrNewsFromApi().subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(object : DisposableSingleObserver<NewsListResponseSchema>() {
                     override fun onSuccess(t: NewsListResponseSchema) {
@@ -58,8 +64,8 @@ class NewsViewModel(
                     }
 
                     override fun onError(e: Throwable) {
-                        newsLoadError.value = true
-                        loading.value = false
+                        _newsLoadError.value = true
+                        _loading.value = false
                         e.printStackTrace()
                     }
                 })
@@ -71,15 +77,15 @@ class NewsViewModel(
     }
 
     private fun fetchDataToUI(newsListData: List<NewsData>) {
-        newsList.postValue(newsListData)
-        newsLoadError.postValue(false)
-        loading.postValue(false)
+        _newsList.postValue(newsListData)
+        _newsLoadError.postValue(false)
+        _loading.postValue(false)
     }
 
     private fun storeNewsLocally(newsListData: List<NewsData>) {
         viewModelScope.launch(Dispatchers.IO) {
-            repository.deleteAllRecentNews()
-            val result = repository.insertNews(newsListData)
+            cachedRepository.deleteAllRecentNews()
+            val result = cachedRepository.insertNews(newsListData)
             var i = 0
             while (i < newsListData.size) {
                 newsListData[i].id = result[i].toInt()
